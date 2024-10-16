@@ -67,7 +67,9 @@ class ChatbotApp:
         self.root.attributes('-topmost', self.always_on_top_var.get())
 
         # Load and display the image
-        image = Image.open("junin.jfif")
+        script_dir = os.path.dirname(__file__)
+        image_path = os.path.join(script_dir, "junin.jfif")
+        image = Image.open(image_path)
         image.thumbnail((400, 400), Image.LANCZOS)
         self.root.geometry(f"{image.width + 50}x{image.height + 500}+100+100")
         self.photo = ImageTk.PhotoImage(image)
