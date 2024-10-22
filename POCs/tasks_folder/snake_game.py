@@ -127,7 +127,7 @@ def jogar():
             clock.tick(snake_speed)
 
         pygame.quit()
-        quit()
+        #quit()
 
     # Clock
     clock = pygame.time.Clock()
