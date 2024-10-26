@@ -6,13 +6,25 @@ import pyautogui
 import matplotlib.pyplot as plt
 import mss
 from PIL import Image
+from computer_use_class import AnthropicToolHandler
 
-# Metadata for this task
-description = "Handle clicking a part of the screen."
-trigger = """If the user ask to click or to point to something, the type is 'click'.
-The click content must be always in english starting with 'point to the...'"""
-example = "{'type': 'handle_click', 'content': 'point to the ...'}"
+setar_molmo = False
 
+if setar_molmo:
+    # Metadata for this task
+    description = "Handle clicking a part of the screen."
+    trigger = """If the user ask to click or to point to something, the type is 'click'.
+    The click content must be always in english starting with 'point to the...'"""
+    example = "{'type': 'handle_click', 'content': 'point to the ...'}"
+else:
+    description = """Usa o computador para buscar na internet, e clicar em sites, botões ou notícias.
+    Informe onde deseja clicar, ou o site que quer acessar, ou a busque que gostaria de fazer.
+    Explique na forma de texto como no exemplo:
+        'Clique no instagram'
+        'Busque no google um site de viagens'
+    """
+    trigger = """Se o usuário pedir para clicar, fazer uma busca ou quiser ver algo na tela, rode isto'"""
+    example = "{'type': 'handle_click', 'content': 'Clique no ...'}"
 def capture_and_show_image_from_second_monitor(width=400, height=400):
     # Initialize mss for screen capturing
     with mss.mss() as sct:
@@ -114,5 +126,13 @@ def click_on(click_this):
 # Function that handles the task
 def execute(content):
     print("Click:", content)
-    click_on(content)
-    return content
+
+    if setar_molmo:
+        click_on(content)
+        return content
+    else:
+        handler = AnthropicToolHandler(monitor_index=2, monitor_offset=[1920, 0], falar=True)
+        result = handler.handle_chat(content)
+
+        #return str(result)
+        return "Deu certo?"
