@@ -143,9 +143,12 @@ class ChatbotApp:
         self.is_recording = False
         self.is_recording_vad = False
         self.stop_event = threading.Event()
-        self.is_vad_active = False  # Para rastrear se a gravação VAD está ativa ou não
+        #self.is_vad_active = False  # Para rastrear se a gravação VAD está ativa ou não
         self.vad_status_changed = True  # Para evitar múltiplas impressões
         self.chat_history = []
+
+        self.interromper = False
+        self.please_interrupt = True
 
         #global is_recording, last_detection_time, continuous_detection_start_time, threshold, is_vad_active, vad_status_changed
 
@@ -270,6 +273,7 @@ class ChatbotApp:
         self.recording_thread.start()
 
     def record(self):
+        self.please_interrupt = True
         while self.is_recording:
             data = self.audio_stream.read(CHUNK)
             self.frames.append(data)
@@ -277,6 +281,8 @@ class ChatbotApp:
         # Stop the audio stream after recording ends
         self.audio_stream.stop_stream()
         self.audio_stream.close()
+
+        self.please_interrupt = False
 
         # Convert recorded audio to bytes
         audio_data = b''.join(self.frames)
@@ -290,6 +296,7 @@ class ChatbotApp:
 
         # Use Whisper for speech-to-text
         transcript = self.transcribe_audio(audio_file)
+        
         print("Transcrição", transcript)
         if transcript:
             self.display_message("You: " + transcript)
@@ -402,6 +409,11 @@ class ChatbotApp:
                 ) as response:
                     for chunk in response.iter_bytes(1024):
                         self.stream.write(chunk)
+                        
+                        if self.please_interrupt:
+                            print("INTERROMPEU")
+                            break
+                    self.interromper = False
             elif selected_engine == "PC Voice":
                 self.tts_engine.setProperty('voice', selected_voice)
                 self.tts_engine.say(response_text)
@@ -499,7 +511,11 @@ class ChatbotApp:
                     if elapsed_detection_time >= DETECTION_TIME:
                         if not is_vad_active:
                             print("Som detectado! Gravando...")
+                            
+                            if self.please_interrupt:
+                                self.interromper = True
                             self.is_recording = True
+                            
                             self.start_recording()
                             #update_button_state("Parar Gravação", "Recording.TButton")
                             is_vad_active = True  # A gravação está ativa
