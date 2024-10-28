@@ -41,7 +41,7 @@ class ChatbotApp:
         self.root.configure(bg='white')
 
         # Load saved settings
-        self.settings_file = os.path.join(os.path.expanduser("~"), "junin_settings.json")
+        self.settings_file = os.path.join(os.getcwd(), "junin_settings.json")
         self.settings = self.load_settings()
         
         # Configure language and update UI
@@ -105,7 +105,7 @@ class ChatbotApp:
 
         # Checkbox para ativar/desativar gravação com VAD
         self.vad_enabled_var = tk.BooleanVar(value=self.settings.get("vad_enabled", False))
-        self.vad_checkbox = tk.Checkbutton(voice_config_frame, text="Ativar Gravação com VAD", variable=self.vad_enabled_var)
+        self.vad_checkbox = tk.Checkbutton(voice_config_frame, text="Ativar Gravação com VAD", variable=self.vad_enabled_var, command=self.vad_checkbox_callback)
         self.vad_checkbox.pack(pady=5)
         self.hear_response_checkbox.pack(side='left')
         self.vad_checkbox.pack(side='left', padx=10)
@@ -167,8 +167,17 @@ class ChatbotApp:
                         frames_per_buffer=CHUNK)
         
         # calibrando ruido
-        self.threshold = self.calibrate_noise_threshold()
+        if self.vad_enabled_var.get():
+            self.threshold = self.calibrate_noise_threshold()
+        else:
+            self.threshold = 200
 
+    def vad_checkbox_callback(self):
+        if self.vad_enabled_var.get():
+            print("VAD enabled")
+            self.threshold = self.calibrate_noise_threshold()
+        else:
+            print("VAD disabled")
     def load_settings(self):
         if os.path.exists(self.settings_file):
             with open(self.settings_file, 'r') as file:
@@ -196,6 +205,7 @@ class ChatbotApp:
             self.vad_checkbox.config(text="Ativar Gravação VAD")
 
     def save_settings(self):
+        print("Salvando preferencias.")
         self.settings["selected_voice"] = self.voice_var.get()
         self.settings["always_on_top"] = self.always_on_top_var.get()
         self.settings["selected_language"] = self.language_var.get()
@@ -434,9 +444,11 @@ class ChatbotApp:
             self.display_message("You: " + user_message)
             self.user_input.delete("1.0", tk.END)
             response = self.get_response(user_message)
-            self.display_message("Bot: " + response)
-            if self.hear_response_var.get():
-                self.speak_response(response)
+
+            if response != "":
+                self.display_message("Bot: " + response)
+                if self.hear_response_var.get():
+                    self.speak_response(response)
 
     def new_line(self, event=None):
         self.user_input.insert(tk.INSERT, "\n")
