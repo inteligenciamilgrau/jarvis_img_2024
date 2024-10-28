@@ -172,6 +172,8 @@ class ChatbotApp:
         else:
             self.threshold = 200
 
+        self.fechando = False
+
     def vad_checkbox_callback(self):
         if self.vad_enabled_var.get():
             print("VAD enabled")
@@ -308,7 +310,7 @@ class ChatbotApp:
         transcript = self.transcribe_audio(audio_file)
         
         print("Transcrição", transcript)
-        if transcript:
+        if transcript != "" and transcript is not None:
             self.display_message("You: " + transcript)
             response = self.get_response(transcript)
             self.display_message("Bot: " + response)
@@ -456,6 +458,7 @@ class ChatbotApp:
 
     def on_closing(self):
         try:
+            self.fechando = True
             keyboard.unhook_all_hotkeys()
             if self.voice_engine_var.get() == "PC Voice":
                 self.tts_engine.stop()  # Stop the TTS engine to release resources
@@ -509,6 +512,8 @@ class ChatbotApp:
         is_vad_active = False  # Inicialmente, a gravação VAD não está ativa
 
         while self.is_recording_vad and not self.stop_event.is_set():
+            if self.fechando:
+                break
             data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
             volume = np.linalg.norm(data)
 
