@@ -148,7 +148,7 @@ class ChatbotApp:
         self.chat_history = []
 
         self.interromper = False
-        self.please_interrupt = True
+        self.please_interrupt = False
 
         #global is_recording, last_detection_time, continuous_detection_start_time, threshold, is_vad_active, vad_status_changed
 
