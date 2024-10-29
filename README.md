@@ -1,5 +1,5 @@
-# jarvis_img_2024
-Jarvis Versão 2024 com IA Avançada
+# JUNIN do IMG (Jarvis)
+JUNIN Versão 2024 com IA Avançada (Jarvis)
 
 Playlist com Todos os Vídeos:
 
