@@ -1,0 +1,19 @@
+openai>=1.0.0
+python-dotenv>=0.19.0
+Pillow>=9.0.0
+PyAudio>=0.2.11  # Requires system-level audio development libraries
+    # For Windows: 
+    #   - Install Microsoft Visual C++ Build Tools
+    #   - pip install pipwin
+    #   - pipwin install pyaudio
+    # For Linux: 
+    #   - sudo apt-get install python3-pyaudio
+    # For macOS:
+    #   - brew install portaudio
+    #   - pip install pyaudio
+keyboard>=0.13.5
+numpy>=1.21.0
+pyttsx3>=2.90
+python-dotenv>=0.19.0
+whisper>=1.0.0  # Optional for local transcription
+scipy>=1.7.0  # Required for audio resampling

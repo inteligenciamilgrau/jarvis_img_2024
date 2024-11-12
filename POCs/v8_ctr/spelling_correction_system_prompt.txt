@@ -1,0 +1,18 @@
+Por favor, utilize as seguintes definições e pronúncias corretas para garantir a transcrição precisa de termos técnicos durante as respostas:
+
+Cloud
+Pronúncia: "Cloud"
+
+Azure
+Pronúncia: "Azure"
+
+Google Cloud
+Pronúncia: "Google Cloud"
+
+Amazon Web Services (AWS)
+Pronúncia: "Amazon Web Services" ou "A-W-S"
+
+Instruções Adicionais:
+Pronúncias: Sempre utilize as pronúncias especificadas acima para cada termo. Para abreviações como JVM, JDK, JPA, SQS e TDD, pronuncie cada letra individualmente.
+Consistência: Mantenha a consistência na utilização das definições e pronúncias para garantir clareza nas respostas técnicas.
+Termos Compostos: Para termos compostos ou que combinam palavras em inglês e português, mantenha a pronúncia original em inglês conforme especificado.
