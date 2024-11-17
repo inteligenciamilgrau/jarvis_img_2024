@@ -2,14 +2,21 @@ import tkinter as tk
 import keyboard
 from dotenv import load_dotenv
 
-from modules.audio_handler import AudioHandler
-from modules.speech_handler import SpeechHandler
-from modules.chat_handler import ChatHandler
-from modules.computer_control import AnthropicToolHandler
-from modules.task_manager import TaskManager
+from handlers.audio_handler import AudioHandler
+from handlers.speech_handler import SpeechHandler
+from handlers.chat_handler import ChatHandler
+from modules.anthropic.computer_control.computer_control import AnthropicToolHandler
+from tasks_folder.task_manager import TaskManager
 from ui.app_layout import AppLayout
-from ui.settings_manager import SettingsManager
-from ui.event_handlers import EventHandlers
+from config.settings_manager import SettingsManager
+from config.audio_config import AudioDeviceConfig
+from handlers.event_handlers import EventHandlers
+from config.log_config import LogConfig  # Importação do sistema de logs
+import logging
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+log = logging.getLogger(__name__)
 
 class JuninApp:
     def __init__(self, root):
@@ -60,6 +67,9 @@ class JuninApp:
             'voice_engine': tk.StringVar(value=self.settings_manager.get_setting("selected_voice_engine", "tts-1")),
             'voice': tk.StringVar(value=self.settings_manager.get_setting("selected_voice", "alloy")),
             'voice_speed': tk.StringVar(value=str(self.settings_manager.get_setting("voice_speed", "1.5"))),
+            'accent': tk.StringVar(value=self.settings_manager.get_setting("selected_accent", "Default (Sem sotaque)")),
+            'intonation': tk.StringVar(value=self.settings_manager.get_setting("selected_intonation", "Default (Sem entonação)")),
+            'emotion': tk.StringVar(value=self.settings_manager.get_setting("selected_emotion", "Bem calmo")),
             'whisper': tk.StringVar(value=self.settings_manager.get_setting("selected_whisper", "Online")),
             'chatgpt_model': tk.StringVar(value=self.settings_manager.get_setting("selected_model", "gpt-4-mini")),
             'spelling_correction': tk.StringVar(value="None"),
@@ -67,11 +77,15 @@ class JuninApp:
             'monitor_index': tk.IntVar(value=self.settings_manager.get_setting("monitor_index", 1)),
             'monitor_offset_x': tk.StringVar(value=str(self.settings_manager.get_setting("monitor_offset", [0, 0])[0])),
             'monitor_offset_y': tk.StringVar(value=str(self.settings_manager.get_setting("monitor_offset", [0, 0])[1])),
-            'computer_speech': tk.BooleanVar(value=self.settings_manager.get_setting("computer_speech", False))
+            'computer_speech': tk.BooleanVar(value=self.settings_manager.get_setting("computer_speech", False)),
+            # Nova variável para controle de transcrição
+            'transcription_active': tk.BooleanVar(value=self.settings_manager.get_setting("transcription_active", True)),
+            # Nova variável para controle de logs
+            'show_logs': tk.BooleanVar(value=self.settings_manager.get_setting("show_logs", False))
         }
 
         # Variáveis do dispositivo de áudio
-        audio_devices = AudioHandler.list_audio_devices()
+        audio_devices = AudioDeviceConfig.list_audio_devices()
         default_input = audio_devices['input'][0]['name'] if audio_devices['input'] else ""
         default_output = audio_devices['output'][0]['name'] if audio_devices['output'] else ""
         
@@ -80,32 +94,67 @@ class JuninApp:
             'output_device': tk.StringVar(value=self.settings_manager.get_setting("output_device", default_output)),
         })
 
+        # Adiciona trace para salvar o estado da transcrição ativa
+        def on_transcription_change(*args):
+            self.settings_manager.set_setting("transcription_active", self.vars['transcription_active'].get())
+            log.info("Estado da transcrição ativa alterado para: %s", self.vars['transcription_active'].get())
+        self.vars['transcription_active'].trace('w', on_transcription_change)
+
+        # Adiciona trace para o modo whisper
+        def on_whisper_change(*args):
+            mode = self.vars['whisper'].get()
+            self.settings_manager.set_setting("selected_whisper", mode)
+            log.info("Modo de transcrição alterado para: %s", mode)
+        self.vars['whisper'].trace('w', on_whisper_change)
+
+        # Adiciona trace para o controle de logs
+        def on_show_logs_change(*args):
+            show_logs = self.vars['show_logs'].get()
+            self.settings_manager.set_setting("show_logs", show_logs)
+            LogConfig.get_instance().set_log_visibility(show_logs)
+            log.info("Visibilidade dos logs alterada para: %s", show_logs)
+        self.vars['show_logs'].trace('w', on_show_logs_change)
+
+        # Configura o estado inicial dos logs
+        LogConfig.get_instance().set_log_visibility(self.vars['show_logs'].get())
+
     def initialize_handlers(self):
         """Inicializa todos os handlers necessários.""" 
+        # Cria uma única instância do TaskManager
+        task_manager = TaskManager()
+        
         # Handlers principais
         self.handlers = {
             'audio': AudioHandler(on_recording_complete=self.handle_recording_complete),
-            'speech': SpeechHandler(voice_speed_var=self.vars['voice_speed']),
-            'chat': ChatHandler(),
-            'task': TaskManager(),
+            'speech': SpeechHandler(
+                task_manager, 
+                voice_speed_var=self.vars['voice_speed'],
+                accent_var=self.vars['accent'],
+                emotion_var=self.vars['emotion'],
+                intonation_var=self.vars['intonation'],
+                vars=self.vars
+            ),
+            'chat': ChatHandler(task_manager),  # Passa o TaskManager para o ChatHandler
+            'task': task_manager,  # Usa a mesma instância
             'computer': AnthropicToolHandler(
                 monitor_index=self.settings_manager.get_setting("monitor_index", 1),
                 monitor_offset=self.settings_manager.get_setting("monitor_offset", [0, 0]),
                 falar=self.settings_manager.get_setting("computer_speech", False)
             ),
-            'settings': self.settings_manager  # Adiciona o settings_manager aos handlers
+            'settings': self.settings_manager
         }
-
-    def initialize_ui(self):
-        """Inicializa todos os componentes da UI.""" 
-        # Inicializa os manipuladores de eventos com componentes vazios primeiro
+        
+        # Inicializa o event_handlers e adiciona ao dicionário de handlers
         self.event_handlers = EventHandlers(
             {},  # Dicionário de componentes vazio por enquanto
             self.handlers,
             self.vars,
             self.settings_manager
         )
+        self.handlers['events'] = self.event_handlers
 
+    def initialize_ui(self):
+        """Inicializa todos os componentes da UI.""" 
         # Atualiza os callbacks com os métodos reais dos manipuladores de eventos
         self.callbacks.update({
             'send_message': self.event_handlers.send_message,
@@ -116,6 +165,7 @@ class JuninApp:
             'update_voice_dropdown': self.event_handlers.update_voice_dropdown,
             'vad_checkbox': self.event_handlers.vad_checkbox_callback,
             'spelling_correction': self.event_handlers.handle_spelling_correction,
+            'toggle_logs': self.event_handlers.toggle_logs,  # Novo callback para controle de logs
         })
 
         # Inicializa o layout com os callbacks atualizados
@@ -176,6 +226,9 @@ class JuninApp:
         settings = {
             "selected_voice": self.vars['voice'].get(),
             "voice_speed": self.vars['voice_speed'].get(),
+            "selected_accent": self.vars['accent'].get(),
+            "selected_intonation": self.vars['intonation'].get(),
+            "selected_emotion": self.vars['emotion'].get(),
             "always_on_top": self.vars['always_on_top'].get(),
             "selected_language": self.vars['language'].get(),
             "hear_response": self.vars['hear_response'].get(),
@@ -190,6 +243,10 @@ class JuninApp:
             "monitor_index": self.vars['monitor_index'].get(),
             "monitor_offset": [x_offset, y_offset],
             "computer_speech": self.vars['computer_speech'].get(),
+            # Salva o estado da transcrição ativa
+            "transcription_active": self.vars['transcription_active'].get(),
+            # Salva o estado dos logs
+            "show_logs": self.vars['show_logs'].get(),
             # Salva a geometria da janela
             "window_geometry": self.root.geometry()
         }
@@ -205,7 +262,7 @@ class JuninApp:
                 self.handlers['computer'].tts.cleanup()
             self.save_settings()
         except Exception as e:
-            print(f"Erro durante a limpeza: {e}")
+            log.error("Erro durante a limpeza: %s", e)
         finally:
             self.root.destroy()
 

@@ -9,7 +9,7 @@ import mss.tools
 import pyautogui
 import keyboard
 from PIL import Image
-from modules.text_to_speech import TextToSpeech
+from modules.open_ai.tts.tts import OpenAITTS
 load_dotenv()
 
 # Configurações de gravação de áudio
@@ -25,7 +25,7 @@ class AnthropicToolHandler:
         self.messages = []
         self.falar = falar
 
-        self.tts = TextToSpeech()
+        self.tts = OpenAITTS()
 
         falar_muito = False
         if falar_muito:
@@ -45,15 +45,13 @@ class AnthropicToolHandler:
         response = self.client.beta.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1024,
-            tools=[
-                {
+            tools=[{
                     "type": "computer_20241022",
                     "name": "computer",
-                    "display_width_px": 1024,
-                    "display_height_px": 768,
+                    "display_width_px": 1920,
+                    "display_height_px": 1024,
                     "display_number": 1,
-                },
-            ],
+                }],
             messages=messages,
             betas=["computer-use-2024-10-22"],
         )
@@ -240,7 +238,7 @@ class AnthropicToolHandler:
         return output
 
 def main():
-    handler = AnthropicToolHandler(monitor_index=2, monitor_offset=[1920, 0], falar=True)
+    handler = AnthropicToolHandler(monitor_index=1, monitor_offset=[1920, 0], falar=True)
     result = handler.handle_chat("Clique no instagram?")
     print(result)
 

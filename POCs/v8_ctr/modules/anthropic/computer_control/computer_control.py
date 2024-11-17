@@ -10,8 +10,8 @@ import pyautogui
 import keyboard
 from PIL import Image
 
-from config.theme import AudioConfig
-from modules.text_to_speech import TextToSpeech
+from config.audio_config import AudioConfig
+from modules.open_ai.tts.tts import OpenAITTS
 
 load_dotenv()
 
@@ -22,7 +22,7 @@ class AnthropicToolHandler:
         self.client = anthropic.Anthropic()
         self.messages = []
         self.falar = falar
-        self.tts = TextToSpeech() if falar else None
+        self.tts = OpenAITTS() if falar else None
 
     def perguntando(self, messages):
         response = self.client.beta.messages.create(
@@ -31,8 +31,8 @@ class AnthropicToolHandler:
             tools=[{
                 "type": "computer_20241022",
                 "name": "computer",
-                "display_width_px": 1024,
-                "display_height_px": 768,
+                "display_width_px": 1920,
+                "display_height_px": 1080,
                 "display_number": 1,
             }],
             messages=messages,
@@ -51,7 +51,7 @@ class AnthropicToolHandler:
             screenshot = sct.grab(monitor)
 
             img = Image.frombytes('RGB', screenshot.size, screenshot.rgb)
-            img = img.resize((1024, 768))
+            #img = img.resize((1024, 768))
 
             img_buffer = io.BytesIO()
             img.save(img_buffer, format='JPEG')
@@ -91,7 +91,7 @@ class AnthropicToolHandler:
             output_message = "Captura de tela realizada."
 
         elif action == "mouse_move":
-            new_coordinate = self.convert_coordinate((1024, 768), (1920, 1080), response.content[1].input['coordinate'])
+            new_coordinate = self.convert_coordinate((1920, 1080), (1920, 1080), response.content[1].input['coordinate'])
             if self.monitor_index > 1:
                 new_coordinate[0] += self.monitor_offset[0]
             pyautogui.moveTo(new_coordinate)

@@ -7,7 +7,12 @@ import pyautogui
 import matplotlib.pyplot as plt
 import mss
 from PIL import Image
-from modules.computer_use_handler import AnthropicToolHandler
+from modules.anthropic.computer_control.handlers.computer_use_handler import AnthropicToolHandler
+import logging
+
+# Configuração do logger
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 setar_molmo = False
 
@@ -61,7 +66,7 @@ def click_on(click_this):
     image.save(buffered, format="PNG")  # Salva a imagem no buffer como formato PNG
     base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-    print("Chamando replicate")
+    log.info("Chamando replicate")
     # Executa o modelo e obtém a saída
     output = replicate.run(
         "zsxkib/molmo-7b:76ebd700864218a4ca97ac1ccff068be7222272859f9ea2ae1dd4ac073fa8de8",
@@ -77,7 +82,7 @@ def click_on(click_this):
     )
 
     # Imprime a saída para verificar sua estrutura
-    print("Output:", output)
+    log.info("Output: %s", output)
 
     # Padrão para extrair coordenadas x e y da saída, seja no formato <point> ou <points>
     pattern = r'x\d*="([\d.]+)" y\d*="([\d.]+)"'
@@ -87,9 +92,9 @@ def click_on(click_this):
     coordinates = [(float(x), float(y)) for x, y in matches]
 
     # Imprime as coordenadas
-    print("Coordenadas dos pontos:")
+    log.info("Coordenadas dos pontos:")
     for i, (x, y) in enumerate(coordinates):
-        print(f"Ponto {i + 1}: ({x + segundo_monitor_pixels}, {y})")
+        log.info("Ponto %d: (%f, %f)", i + 1, x + segundo_monitor_pixels, y)
 
     # Converte coordenadas de relativas para posições de pixel
     width, height = image.size
@@ -110,7 +115,7 @@ def click_on(click_this):
 
         ax.scatter(x_coords, y_coords, color='black', s=400, marker='o')
 
-        print("coords", x_coords, y_coords, image.size)
+        log.info("coords: %s, %s, %s", x_coords, y_coords, image.size)
 
         with mss.mss() as sct:
             # Obtém a posição do segundo monitor
@@ -126,16 +131,16 @@ def click_on(click_this):
     return output
 
 def chat_handler_thread(message):
-    print("Usando PC!", message)
-    handler = AnthropicToolHandler(monitor_index=2, monitor_offset=[1920, 0], falar=False)
-    print("Iniciando ferramenta")
+    log.info("Usando PC! %s", message)
+    handler = AnthropicToolHandler(monitor_index=1, monitor_offset=[0, 0], falar=False)  # Ajustado para monitor_index=1
+    log.info("Iniciando ferramenta")
     result = handler.handle_chat(message)
     # Faça algo com o resultado se necessário
-    print(result)
+    log.info("%s", result)
 
 # Função que lida com a tarefa
 def execute(content):
-    print("Clique:", content)
+    log.info("Clique: %s", content)
 
     if setar_molmo:
         click_on(content)

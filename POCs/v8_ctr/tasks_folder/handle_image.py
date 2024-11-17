@@ -3,6 +3,11 @@ import base64
 from openai import OpenAI
 from PIL import Image
 import mss
+import logging
+
+# Configuração do logger
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 # Metadados para esta tarefa
 description = "Lida com uma solicitação sobre uma imagem."
@@ -63,7 +68,7 @@ def ler_tela(message, model="gpt-4o-mini"):
         max_tokens=300,
     )
 
-    print("Resposta:", response.choices[0].message.content)
+    log.info("Resposta: %s", response.choices[0].message.content)
     return response.choices[0].message.content
 
 # Função que lida com a tarefa

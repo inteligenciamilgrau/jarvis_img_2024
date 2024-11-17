@@ -26,14 +26,3 @@ class DarkTheme:
     CHAT_TEXT = "#FFFFFF"
     USER_MESSAGE_BG = "#2D2D2D"
     BOT_MESSAGE_BG = "#3D3D3D"
-
-class AudioConfig:
-    CHUNK = 1024
-    FORMAT = 8  # pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 24000
-    MOVING_AVERAGE_WINDOW = 50
-    VOLUME_MULTIPLIER = 3
-    NOISE_FLOOR = 100
-    RECORD_TIME_AFTER_DETECTION = 2.0
-    DETECTION_TIME = 0.2

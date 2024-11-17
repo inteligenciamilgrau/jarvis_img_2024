@@ -1,9 +1,14 @@
 import importlib.util
 import os
 from typing import Dict, Any, Callable
+import logging
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 class TaskManager:
-    def __init__(self, tasks_path='tasks_folder', prompt_file='system_prompt.txt', spelling_prompt_file='spelling_correction_system_prompt.txt'):
+    def __init__(self, tasks_path='tasks_folder', prompt_file='prompts/system_prompt.txt', spelling_prompt_file='prompts/spelling_correction_word.txt'):
         """
         Inicializa o gerenciador de tarefas.
         
@@ -34,7 +39,7 @@ class TaskManager:
         """
         handlers = {}
         for filename in os.listdir(tasks_path):
-            if filename.endswith('.py'):
+            if filename.endswith('.py') and filename != 'task_manager.py':  # Ignora o task_manager.py
                 task_name = filename[:-3]  # Remove a extensão '.py'
                 module_path = os.path.join(tasks_path, filename)
                 
@@ -44,14 +49,20 @@ class TaskManager:
                     spec.loader.exec_module(module)
 
                     # Carrega os metadados e a função de execução
+                    execute_func = getattr(module, 'execute', None)
+                    if execute_func is None:
+                        log.info("Erro: A tarefa %s não possui a função 'execute'.", task_name)
+                    else:
+                        log.info("Tarefa carregada: %s com a função execute.", task_name)
+                    
                     handlers[task_name] = {
                         'description': getattr(module, 'description', 'Nenhuma descrição fornecida.'),
                         'trigger': getattr(module, 'trigger', 'Nenhum gatilho fornecido.'),
                         'example': getattr(module, 'example', 'Nenhum exemplo fornecido.'),
-                        'execute': getattr(module, 'execute')
+                        'execute': execute_func
                     }
                 except Exception as e:
-                    print(f"Erro ao carregar a tarefa {task_name}: {e}")
+                    log.info("Erro ao carregar a tarefa %s: %s", task_name, e)
                     
         return handlers
     
@@ -104,7 +115,8 @@ class TaskManager:
             str: Prompt do sistema completo com informações sobre todas as tarefas
         """
         # Recarrega os manipuladores de tarefas para garantir que temos as informações mais recentes
-        self.task_handlers = self.load_task_handlers(self.tasks_path)
+        # Removido para evitar chamadas desnecessárias
+        # self.task_handlers = self.load_task_handlers(self.tasks_path)
 
         # Carrega o prompt base do sistema
         prompt = self.load_system_prompt() + "\n\n"

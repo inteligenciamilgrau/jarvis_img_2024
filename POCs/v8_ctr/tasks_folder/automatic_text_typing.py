@@ -10,5 +10,9 @@ def funcao_digitacao(texto):
 
 # Função que lida com a tarefa
 def execute(content): # o conteúdo sempre vem no formato string, peça um JSON se necessário
-    print(f'Tarefa: {content}\n')
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    log = logging.getLogger(__name__)
+
+    log.info('Tarefa: %s', content)
     return str(funcao_digitacao(content)) # sempre retorne uma string

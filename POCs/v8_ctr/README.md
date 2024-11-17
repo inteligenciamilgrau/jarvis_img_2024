@@ -15,11 +15,13 @@ Uma aplicação de chatbot moderna com tema escuro, capacidades avançadas de in
 - Captura de tela e análise de imagem
 - Controle de mouse e teclado
 - Execução de tarefas automatizadas
+- Configuração de monitor e offset personalizado
 
 ### Sistema de Tarefas Dinâmico
 - Carregamento dinâmico de tarefas
 - Sistema de plugins extensível
 - Gerenciamento flexível de comandos
+- Suporte a múltiplos tipos de tarefas
 
 ## Melhorias em relação à v7
 
@@ -27,6 +29,7 @@ Uma aplicação de chatbot moderna com tema escuro, capacidades avançadas de in
    - Design moderno e elegante com tema escuro
    - Hierarquia visual e legibilidade aprimoradas
    - Componentes de UI modernos com estilo personalizado
+   - Sistema de logs integrado com controle de visibilidade
 
 2. **Arquitetura Modular Aprimorada**
    - Organização clara de componentes e responsabilidades
@@ -38,31 +41,43 @@ Uma aplicação de chatbot moderna com tema escuro, capacidades avançadas de in
    - Seleção avançada de dispositivos
    - Gerenciamento robusto de dispositivos de entrada/saída
    - Detecção de atividade de voz (VAD) aprimorada
+   - Controle de velocidade de voz
+   - Personalização de sotaque, entonação e emoção
 
 ## Estrutura do Projeto
 
 ```
 junin_v8/
-├── config/
-│   └── theme.py           # Configuração de tema e áudio
+├── _pocs/                 # Provas de conceito e testes
+├── config/               
+│   ├── audio_config.py    # Configurações de áudio
+│   ├── log_config.py      # Configurações de log
+│   └── settings_manager.py # Gerenciador de configurações
+├── handlers/
+│   ├── audio_handler.py   # Manipulação de áudio
+│   ├── chat_handler.py    # Manipulação de chat
+│   ├── event_handlers.py  # Manipulação de eventos
+│   └── speech_handler.py  # Manipulação de fala
 ├── modules/
-│   ├── audio_handler.py   # Gravação de áudio e gerenciamento de dispositivos
-│   ├── chat_handler.py    # Interações de chat e API
-│   ├── speech_handler.py  # Texto para fala e fala para texto
-│   ├── computer_control.py # Controle do computador via Anthropic
-│   ├── text_to_speech.py  # Sistema TTS independente
-│   └── task_manager.py    # Gerenciamento de tarefas dinâmicas
+│   ├── anthropic/         # Módulos de integração Anthropic
+│   │   └── computer_control/
+│   ├── ollama/           # Módulos de integração Ollama
+│   │   └── chat/
+│   └── open_ai/          # Módulos de integração OpenAI
+│       ├── chat/         # Chat completions
+│       ├── chat_realtime/ # Chat em tempo real
+│       ├── stt/          # Speech to Text
+│       └── tts/          # Text to Speech
+├── prompts/              # Templates de prompts
+├── tasks_folder/         # Tarefas dinâmicas
 ├── ui/
-│   ├── components.py      # Componentes modernos de UI
-│   ├── app_layout.py      # Layout da aplicação
-│   ├── settings_manager.py # Gerenciamento de configurações
-│   └── event_handlers.py  # Manipuladores de eventos
-├── tasks_folder/          # Tarefas dinâmicas carregáveis
-│   ├── handle_normal.py   # Tarefa padrão
-│   ├── handle_click.py    # Tarefa de clique
-│   └── handle_image.py    # Tarefa de imagem
-├── app.py                # Aplicação principal
-└── requirements.txt      # Dependências do projeto
+│   ├── app_layout.py     # Layout principal
+│   ├── components.py     # Componentes de UI
+│   ├── theme.py         # Configurações de tema
+│   └── imgs/            # Recursos de imagem
+├── app.py               # Aplicação principal
+├── junin_settings.json  # Configurações do aplicativo
+└── requirements.txt     # Dependências do projeto
 ```
 
 ## Recursos
@@ -74,10 +89,19 @@ junin_v8/
 - Seleção de dispositivo de áudio
 - Automação de computador via Anthropic
 - Sistema de tarefas dinâmico
-- Configurações personalizáveis
-- Preferências de usuário persistentes
+- Configurações personalizáveis:
+  - Velocidade de voz
+  - Sotaque
+  - Entonação
+  - Emoção
+  - Idioma
+  - Modelo de chat GPT
+  - Motor de voz
+  - Configurações de monitor
+- Sistema de logs integrado
+- Transcrição em tempo real (online/offline)
+- Correção ortográfica
 - Suporte a teclas de atalho globais
-- Transcrição em tempo real
 
 ## Requisitos
 
@@ -85,7 +109,16 @@ junin_v8/
 - Chave da API OpenAI
 - Chave da API Anthropic (para automação de computador)
 - Bibliotecas de áudio em nível de sistema
-- Dependências listadas em requirements.txt
+- Dependências listadas em requirements.txt:
+  - openai>=1.0.0
+  - python-dotenv>=0.19.0
+  - Pillow>=9.0.0
+  - PyAudio>=0.2.11
+  - keyboard>=0.13.5
+  - numpy>=1.21.0
+  - pyttsx3>=2.90
+  - whisper>=1.0.0 (opcional para transcrição local)
+  - scipy>=1.7.0
 
 ## Instalação
 
@@ -119,15 +152,14 @@ junin_v8/
    python app.py
    ```
 
-2. Recursos:
+2. Recursos disponíveis:
    - Selecione dispositivos de áudio de entrada e saída
-   - Digite mensagens na área de entrada
-   - Clique no botão de gravação ou use Ctrl+Alt para gravar voz
-   - Ative o VAD para detecção automática de voz
-   - Escolha entre diferentes vozes TTS
-   - Selecione o idioma preferido
-   - Ative/desative a fala de resposta
-   - Alternar janela sempre no topo
+   - Configure velocidade, sotaque, entonação e emoção da voz
+   - Escolha entre diferentes modelos de chat GPT
+   - Alterne entre transcrição online/offline
+   - Ative/desative o sistema de logs
+   - Configure índice e offset do monitor
+   - Ative/desative fala do computador
    - Use comandos para automação do computador
    - Adicione novas tarefas na pasta tasks_folder
 
